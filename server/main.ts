@@ -5,6 +5,7 @@ import * as path from "@std/path";
 import { Port } from "../lib/utils/index.ts";
 import listInsights from "./operations/list-insights.ts";
 import lookupInsight from "./operations/lookup-insight.ts";
+import { createTable as createInsightsTable } from "./tables/insights.ts";
 
 console.log("Loading configuration");
 
@@ -20,7 +21,11 @@ console.log(`Opening SQLite database at ${dbFilePath}`);
 await Deno.mkdir(path.dirname(dbFilePath), { recursive: true });
 const db = new Database(dbFilePath);
 
-console.log("Initialising server");
+// Initialize database tables
+console.log("Creating insights table if it doesn't exist");
+db.exec(createInsightsTable);
+
+console.log("Initializing server");
 
 const router = new oak.Router();
 
