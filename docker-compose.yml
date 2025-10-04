@@ -1,0 +1,24 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: suit-tracker-server
+    environment:
+      - SERVER_BASE_URL=0.0.0.0
+      - ARCH=aarch64-apple-darwin
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+    networks:
+      - suit-tracker-network
+
+networks:
+  suit-tracker-network:
+    driver: bridge

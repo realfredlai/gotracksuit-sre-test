@@ -9,7 +9,8 @@ import lookupInsight from "./operations/lookup-insight.ts";
 console.log("Loading configuration");
 
 const env = {
-  port: Port.parse(Deno.env.get("SERVER_PORT")),
+  hostname: Deno.env.get("SERVER_BASE_URL") || "0.0.0.0",
+  port: Port.parse(Deno.env.get("SERVER_PORT") || "8080"),
 };
 
 const dbFilePath = path.resolve("tmp", "db.sqlite3");
