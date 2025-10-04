@@ -1,0 +1,51 @@
+{{- if (and .Values.deployment.enabled (and (not .Values.useStatefulSet) (or (not .Values.persistence.enabled) (eq .Values.persistence.type "pvc")))) }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "microservice-basic.fullname" . }}
+  namespace: {{ include "microservice-basic.namespace" . }}
+  labels:
+    {{- include "microservice-basic.labels" . | nindent 4 }}
+    {{- with .Values.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- if or .Values.annotations .Values.deployment.annotations }}
+  annotations:
+    {{- with .Values.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.deployment.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  
+spec:
+  {{- if and (not .Values.autoscaling.enabled) (.Values.replicas) }}
+  replicas: {{ .Values.replicas }}
+  {{- end }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "microservice-basic.selectorLabels" . | nindent 6 }}
+  {{- with .Values.deploymentStrategy }}
+  strategy:
+    {{- toYaml . | trim | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "microservice-basic.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- if .Values.deployment.forceRestart }}
+        forceRestart: '{{ randAlphaNum 5 | quote }}'
+        {{- end }}
+        kubectl.kubernetes.io/default-container: {{ include "microservice-basic.name" . }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- include "microservice-basic.pod" . | nindent 6 }}
+{{- end }}

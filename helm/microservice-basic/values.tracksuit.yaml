@@ -1,0 +1,7 @@
+microservice-basic:
+  serviceMonitor:
+    enabled: true
+    portName: metrics
+    interval: 60s
+    scrapeTimeout: 10s
+    path: /metrics

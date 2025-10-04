@@ -1,0 +1,20 @@
+apiVersion: v2
+appVersion: 2.5.3
+version: 2.5.3
+kubeVersion: ">=1.27.0-0"
+description: Helm chart for `microservice-basic`. Details included in `README.md`.
+name: microservice-basic
+type: application
+keywords:
+  - microserivce
+  - basic
+  - default
+maintainers:
+  - name: fred.lai
+    email: fred.lai@futureverse.com
+    url: https://github.com/realfredlai
+dependencies:
+  - name: external-secrets
+    version: "1.2.2"
+    repository: https://raw.githubusercontent.com/futureversecom/.-helm-charts/main/
+    condition: external-secrets.enabled

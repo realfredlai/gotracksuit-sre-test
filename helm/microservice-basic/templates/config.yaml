@@ -1,0 +1,17 @@
+{{- if eq .Values.config.create true }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "microservice-basic.fullname" . }}
+  namespace: {{ include "microservice-basic.namespace" . }}
+  labels:
+    {{- include "microservice-basic.labels" . | nindent 4 }}
+  {{- with .Values.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- with .Values.config.data }}
+data:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
+{{- end }}

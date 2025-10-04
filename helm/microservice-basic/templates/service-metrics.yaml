@@ -1,0 +1,16 @@
+{{- if and .Values.service.enabled .Values.metrics.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "microservice-basic.fullname" . }}-metrics
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "microservice-basic.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.metricsService.type }}
+  ports:
+    - port: {{.Values.metricsService.port}}
+      name: {{.Values.metricsService.name}}
+  selector:
+    {{- include "microservice-basic.selectorLabels" . | nindent 4 }}
+{{- end }}

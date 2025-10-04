@@ -1,0 +1,39 @@
+{{- if .Values.keda.enabled -}}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "microservice-basic.fullname" . }}
+  labels:
+    {{- include "microservice-basic.labels" . | nindent 4 }}
+  annotations:
+    {{- if .Values.keda.annotations }}
+    {{- toYaml .Values.keda.annotations | nindent 4 }}
+    {{- end }}
+spec:
+  scaleTargetRef:
+    apiVersion: {{ .Values.keda.scaleTargetRef.apiVersion | default "apps/v1" }}
+    kind: {{ .Values.keda.scaleTargetRef.kind | default "Deployment" }}
+    name: {{ include "microservice-basic.fullname" . }}
+  pollingInterval: {{ .Values.keda.pollingInterval  | default "30"  }}
+  cooldownPeriod: {{ .Values.keda.cooldownPeriod  | default "Deployment"  }}
+  minReplicaCount: {{ .Values.keda.minReplicaCount }} 
+  maxReplicaCount: {{ .Values.keda.maxReplicaCount }}
+  {{- with .Values.keda.fallback }}
+  fallback:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.keda.advanced }}
+  advanced:
+    horizontalPodAutoscalerConfig:
+      name: {{ .horizontalPodAutoscalerConfig.name | default (include "microservice-basic.fullname" $) }}
+      restoreToOriginalReplicaCount: {{ .horizontalPodAutoscalerConfig.restoreToOriginalReplicaCount | default "false" }}
+      {{- with .horizontalPodAutoscalerConfig.behavior }}
+      behavior:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- end }}
+  {{- with .Values.keda.triggers }}
+  triggers:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end -}}

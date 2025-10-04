@@ -1,0 +1,338 @@
+global:
+  imagePullSecrets: []
+  imagePullPolicy: IfNotPresent
+
+fullnameOverride:
+nameOverride:
+
+external-secrets:
+  enabled: false
+
+deployment:
+  enabled: true
+  annotations: {}
+  #   reloader.stakater.com/auto: "true"
+
+statefulset:
+  annotations: {}
+  #   reloader.stakater.com/auto: "true"
+
+podDisruptionBudget:
+  enabled: false
+  # minAvailable: 1
+  # maxUnavailable: 1
+  # minAvailable: 30%
+  # maxUnavailable: 30%
+
+rbac:
+  create: false
+  pspEnabled: false
+  namespaced: false # creates role instead of clsuterrole
+  extraRoleRules: []
+
+config:
+  create: false
+  # if you want to mount the configmap as a volume
+  # mountPath: /etc/config
+  # subPath: config
+  # data:
+  #   config.json: |
+  #     {
+  #       "foo": "bar"
+  #     }
+  # data:
+  #   foo: bar
+
+extraConfigmapMounts:
+  []
+  # - name: extra-config
+  #   mountPath: /etc/config
+  #   subPath: config
+  #   readOnly: false
+  #   configMap: extra-config
+  #   items:
+  #     - key: extra-config.json
+  #       path: extra-config.json
+
+extraSecretMounts:
+  []
+  # - name: extra-config-secret
+  #   mountPath: /etc/configSecret
+  #   subPath: configSecret
+  #   readOnly: true
+  #   defaultMode: 420
+  #   secretName: extra-config-secret
+
+envFromSecrets:
+  []
+  # - name: foo-bar-secret
+
+envFromConfigMaps:
+  []
+  # - name: foo-bar-configmap
+
+env:
+  {}
+  # foo: bar
+  # bar: baz
+
+serviceAccount:
+  create: true
+  #  annotations:
+  #    eks.amazonaws.com/role-arn: arn:aws:iam::123456789000:role/iam-role-name-here
+  automountServiceAccountToken: false
+
+replicas: 3
+
+ingress:
+  enabled: false
+  # annotations:
+  #   kubernetes.io/ingress.class: foobar
+  # pathType: ImplementationSpecific
+  # hosts:
+  #   - host: chart-example.local
+  #     paths:
+  #       - path: /
+  #         pathType: ImplementationSpecific
+  # tls: []
+  # extraPaths: []
+  # backendServicePort: 80
+
+keda: # Mutally exclusive with autoscaling
+  enabled: false
+  annotations: {}
+    # scaledobject.keda.sh/transfer-hpa-ownership: "true"     # Optional. Use to transfer an existing HPA ownership to this ScaledObject
+    # validations.keda.sh/hpa-ownership: "true"               # Optional. Use to disable HPA ownership validation on this ScaledObject
+    # autoscaling.keda.sh/paused: "true"                      # Optional. Use to pause autoscaling of objects explicitly
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  pollingInterval: 30
+  cooldownPeriod: 30
+  advanced:
+    horizontalPodAutoscalerConfig:
+      # name: foobar # Optional. Use to set a custom name for the HPA
+      # restoreToOriginalReplicaCount: false # Optional. Use to restore the original replica count of the HPA
+      behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 0
+          policies:
+            - type: Percent
+              value: 25
+              periodSeconds: 30
+        scaleDown:
+          restoreToOriginalReplicaCount: true
+          stabilizationWindowSeconds: 0
+          policies:
+            - type: Percent
+              value: 10
+              periodSeconds: 60
+  triggers: []
+    # - type: prometheus
+    #   metadata:
+    #     serverAddress: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+    #     query: 'aws_applicationelb_target_response_time_average{dimension_LoadBalancer="app/k8s-idpbackend-d63d2f23b3/474a731f8dfc99d0"}'
+    #     threshold: '0.200'
+    #     activationThreshold: '0.100'
+    # - type: prometheus
+    #   metadata:
+    #     serverAddress: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+    #     query: 'aws_applicationelb_request_count_average{dimension_LoadBalancer="app/k8s-idpbackend-d63d2f23b3/474a731f8dfc99d0"}'
+    #     threshold: '10000'
+    #     activationThreshold: '5000'
+    # - type: memory
+    #   metricType: Utilization
+    #   metadata:
+    #     type: Utilization
+    #     value: "70"
+    # - type: cpu
+    #   metricType: Utilization
+    #   metadata:
+    #     type: Utilization
+    #     value: "70"
+        
+        
+
+autoscaling: # Mutually exclusive with keda
+  enabled: false
+  # minReplicas: 1
+  # maxReplicas: 10
+  # targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+  # behavior:
+  #   scaleDown:
+  #     stabilizationWindowSeconds: 300
+  #     policies:
+  #       - type: Pods
+  #         value: 1
+  #         periodSeconds: 300
+  #   scaleUp:
+  #     stabilizationWindowSeconds: 300
+  #     policies:
+  #       - type: Pods
+  #         value: 1
+  #         periodSeconds: 300
+
+metrics:
+  enabled: false
+
+service:
+  enabled: false
+  # type: ClusterIP
+  # ports:
+  # - name: foo
+  #   port: 80
+  #   protocol: TCP
+  #   targetPort: 8080
+  # - name: bar
+  #   port: 443
+  #   protocol: TCP
+  #   targetPort: 8443
+
+securityContext:
+  {}
+  # runAsUser: 0
+  # runAsGroup: 0
+
+startupProbe:
+  {}
+  # failureThreshold: 20
+  # httpGet:
+  #   path: /health/readiness
+  #   port: 8080
+  #   scheme: HTTP
+  # periodSeconds: 30
+  # successThreshold: 1
+  # timeoutSeconds: 10
+
+readinessProbe:
+  {}
+  # failureThreshold: 3
+  # httpGet:
+  #   path: /health/readiness
+  #   port: 8080
+  #   scheme: HTTP
+  # periodSeconds: 30
+  # successThreshold: 1
+  # timeoutSeconds: 10
+
+livenessProbe:
+  {}
+  # failureThreshold: 80
+  # httpGet:
+  #   path: /health/readiness
+  #   port: 8080
+  #   scheme: HTTP
+  # periodSeconds: 30
+  # successThreshold: 1
+  # timeoutSeconds: 1
+
+image:
+  registry: docker.io
+  repository: alpine
+  tag: latest
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+args:
+  - |-
+    echo "Hello, World!"
+    sleep infinity
+
+command:
+  - /bin/sh
+  - -c
+
+resources: {}
+#  limits:
+#    cpu: 100m
+#    memory: 128Mi
+#  requests:
+#    cpu: 100m
+#    memory: 128Mi
+
+## Node labels for pod assignment
+## ref: https://kubernetes.io/docs/user-guide/node-selection/
+#
+nodeSelector:
+  {}
+  # foo: bar
+
+## Tolerations for pod assignment
+## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations:
+  {}
+  # - key: "key"
+  #   operator: "Equal"
+  #   value: "value"
+  #   effect: "NoSchedule"
+
+## Affinity for pod assignment (evaluated as template)
+## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+##
+affinity:
+  {}
+  # podAntiAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #     - labelSelector:
+  #         matchExpressions:
+  #           - key: "app"
+  #             operator: "In"
+  #             values:
+  #               - foo
+  #       topologyKey: "kubernetes.io/hostname"
+
+## Topology Spread Constraints
+## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
+##
+topologySpreadConstraints:
+  {}
+  # - maxSkew: 1
+  #   topologyKey: "topology.kubernetes.io/zone"
+  #   whenUnsatisfiable: PreferNoSchedule
+  #   labelSelector:
+  #     matchLabels:
+  #       app: foo
+
+networkPolicy:
+  enabled: false
+
+serviceMonitor:
+  {}
+  # enabled: true
+  # interval: 30s
+  # additionalLabels:
+  #   release: prometheus-operator
+
+persistence:
+  enabled: false
+  type: pvc # can be statefulset or pvc
+  # accessModes:
+  #   - ReadWriteOnce
+  # size: 50Gi
+  # # annotations: {}
+  # finalizers:
+  #   - kubernetes.io/pvc-protection
+  # # selectorLabels: {}
+  # ## Sub-directory of the PV to mount. Can be templated.
+  # mountPath: /var/lib/storage
+  # subPath: storage
+  # ## Name of an existing PVC. Can be templated.
+  # # existingClaim:
+  # ## Extra labels to apply to a PVC.
+  # extraPvcLabels: {}
+
+cronJob:
+  enabled: false
+  # schedule: "*/5 * * * *"
+  # successfulJobsHistoryLimit: 3
+  # failedJobsHistoryLimit: 1
+  # timeZone: Etc/UTC
+  # concurrencyPolicy: Allow # ref: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#concurrency-policy
+  # annotations: {}
+  # jobTemplate:
+  #   restartPolicy: Never # the container restartPolicy, one of: Never, OnFailure, see: https://kubernetes.io/docs/concepts/workloads/controllers/job/#pod-template
+  #   annotations: {}

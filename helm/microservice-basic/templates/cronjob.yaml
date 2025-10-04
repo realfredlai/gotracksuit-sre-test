@@ -1,0 +1,86 @@
+{{- if .Values.cronJob.enabled }}
+apiVersion: {{ include "microservice-basic.cronJob.apiVersion" . }}
+kind: CronJob
+metadata:
+  name: {{ include "microservice-basic.fullname" . }}
+  namespace: {{ include "microservice-basic.namespace" . }}
+  labels:
+    {{- include "microservice-basic.labels" . | nindent 4 }}
+    {{- with .Values.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.cronJob.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  schedule: {{ required "CronJob schedule not defined" .Values.cronJob.schedule | quote }}
+  successfulJobsHistoryLimit: {{ default 3 .Values.cronJob.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ default 1 .Values.cronJob.failedJobsHistoryLimit }}
+  concurrencyPolicy: {{ default "Allow" .Values.cronJob.concurrencyPolicy }}
+  {{- if and (semverCompare ">=1.27-0" .Capabilities.KubeVersion.Version) .Values.cronJob.timeZone }}
+  timeZone: {{ .Values.cronJob.timeZone }}
+  {{- end }}
+  {{- if .Values.cronJob.suspend }}
+  suspend: {{ .Values.cronJob.suspend }}
+  {{- end }}
+  {{- if .Values.cronJob.startingDeadlineSeconds }}
+  startingDeadlineSeconds: {{ .Values.cronJob.startingDeadlineSeconds }}
+  {{- end }}
+  jobTemplate:
+    metadata:
+      labels:
+        {{- include "microservice-basic.labels" . | nindent 8 }}
+        {{- with .Values.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.cronJob.jobTemplate.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- if .Values.cronJob.jobTemplate.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ .Values.cronJob.jobTemplate.activeDeadlineSeconds }}
+      {{- end }}
+      {{- if .Values.cronJob.jobTemplate.backoffLimit }}
+      backoffLimit: {{ .Values.cronJob.jobTemplate.backoffLimit }}
+      {{- end }}
+      {{- if .Values.cronJob.jobTemplate.parallelism }}
+      parallelism: {{ .Values.cronJob.jobTemplate.parallelism }}
+      {{- end }}
+      {{- if .Values.cronJob.jobTemplate.completions }}
+      completions: {{ .Values.cronJob.jobTemplate.completions }}
+      {{- end }}
+      {{- if and .Values.cronJob.jobTemplate.completions .Values.cronJob.jobTemplate.completionMode }}
+      completionMode: {{ .Values.cronJob.jobTemplate.completionMode }}
+      {{- end }}
+      {{- if .Values.cronJob.jobTemplate.ttlSecondsAfterFinished }}
+      ttlSecondsAfterFinished: {{ .Values.cronJob.jobTemplate.ttlSecondsAfterFinished }}
+      {{- end }}
+      {{- if and (semverCompare ">=1.31-0" .Capabilities.KubeVersion.Version) .Values.cronJob.jobTemplate.podFailurePolicy }}
+      podFailurePolicy: 
+        {{- toYaml .Values.cronJob.jobTemplate.podFailurePolicy | nindent 8}}
+      {{- end }}
+      {{- if and (semverCompare ">=1.31-0" .Capabilities.KubeVersion.Version) .Values.cronJob.jobTemplate.successPolicy }}
+      successPolicy: 
+        {{- toYaml .Values.cronJob.jobTemplate.successPolicy | nindent 8}}
+      {{- end }}
+      template:
+        metadata:
+          labels:
+            {{- include "microservice-basic.labels" . | nindent 12 }}
+            {{- with .Values.podLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        spec:
+          {{- include "microservice-basic.pod" . | nindent 10 }}
+          {{- if or (eq .Values.cronJob.jobTemplate.restartPolicy "Never") (eq .Values.cronJob.jobTemplate.restartPolicy "OnFailure") }}
+          restartPolicy: {{ .Values.cronJob.jobTemplate.restartPolicy }}
+          {{- else }}
+          {{ fail (printf "Invalid value for restartPolicy: %s. Allowed values are 'Never' or 'OnFailure'." .Values.cronJob.jobTemplate.restartPolicy) }}
+          {{- end }}
+{{- end }}
