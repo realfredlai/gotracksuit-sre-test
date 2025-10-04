@@ -57,18 +57,20 @@ jobs:
           platforms: ${{ matrix.platform }}
 
       - name: Build image only (PR)
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
+          push: false
+          load: true
           context: .
           file: Dockerfile
           platforms: ${{ matrix.platform }}
           build-args: |
             ARCH=${{ matrix.arch }}
-          push: false
-          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: |
-            suit-tracker:pr-${{ github.event.pull_request.number }}-${{ matrix.tag }}
-            suit-tracker:${{ github.sha }}-pr-${{ matrix.tag }}
+            gosuit-tracker:pr-${{ github.event.pull_request.number }}-${{ matrix.tag }}
+            go-suit-tracker:${{ github.sha }}-pr-${{ matrix.tag }}
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
